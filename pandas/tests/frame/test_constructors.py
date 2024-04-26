@@ -3280,3 +3280,16 @@ class TestAllowNonNano:
     def test_frame_from_dict_allow_non_nano(self, arr):
         df = DataFrame({0: arr})
         assert df.dtypes[0] == arr.dtype
+
+def test_from_sequence_not_strict():
+    # GH 56779
+    data = {'Column1': [1, 2, 3, 33],
+            'Column2': [4, 5, 6, 66],
+            'Column3': [7, 8, 9, 99]}
+    df = pd.DataFrame(data)
+    df["Column2"] = datetime(2024, 1, 1)
+    random_rows = pd.DataFrame([row for _, row in df.sample(n=3).iterrows()])
+    df = pd.concat([df, random_rows])
+
+    expected = np.dtype(f"M8[{'us'}]")
+    tm.assert_equal(df["Column2"].dtype, expected)

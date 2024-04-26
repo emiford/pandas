@@ -2271,6 +2271,11 @@ def _sequence_to_dt64(
     data, copy = maybe_convert_dtype(data, copy, tz=tz)
     data_dtype = getattr(data, "dtype", None)
 
+    if (data_dtype is np.dtype('O') and isinstance(data, np.ndarray)):
+        if (len(data) > 0 and isinstance(data[0], Timestamp.date) and data[0].tz is None):
+            # catch ndarrays that should have a datetime dtype but don't
+            out_unit = data[0].unit
+
     if out_unit is None:
         out_unit = "ns"
     out_dtype = np.dtype(f"M8[{out_unit}]")
